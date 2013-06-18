@@ -2,3 +2,4 @@ data/*
 RefSeq*
 *.pyc
 apps/lagan/*
+src/*
