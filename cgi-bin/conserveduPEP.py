@@ -42,12 +42,12 @@ def char(value, bytes, littleendian = True):
         return ans[::-1]
 
 
-def ordinal(string, littleendian = True):  
+def ordinal(string, littleendian = True):
     value = 0
     if not(littleendian):
         temp = string[::-1]
     else:
-        temp = string  
+        temp = string
     for i in range(0, len(temp)):
         value = value + pow(256,i)*ord(temp[i])
     return value
@@ -77,7 +77,7 @@ def homologytocolour(percentidentity, gradvector):
     if maxpos == None:
         return valuetocolour(minpos*0.25)
     else:
-        raise ArithmeticError 
+        raise ArithmeticError
 
 def vectorResize(vector, newsize):
     if len(vector) == newsize:
@@ -120,7 +120,7 @@ def testbmp(filename='legend.bmp'):
         for j in colourlist:
             openhandle.write(j)
     openhandle.close()
-    
+
 
 def makeheatmap(filename, vector, features, gradient, width, height):
     scale = float(width)/len(vector)
@@ -198,13 +198,13 @@ def makeheatmap(filename, vector, features, gradient, width, height):
     openfile.write(temp)
     openfile.close()
     readfile.close()
-      
+
 def seqcheck(seq, set):
     for i in seq:
         if not(i in set):
             return False
-    return True      
-    
+    return True
+
 def cleanDataDir():
     for root, dirs, files in os.walk("../data"):
         for filename in files:
@@ -219,7 +219,7 @@ def weboutput():
     tempfilename =  '../data/%012x%016x' %(int(time.time()*1000), random.randint(0,0xFFFFFFFFFFFFFFFF))
     form = cgi.FieldStorage()
     if form.keys() == []:
-        print "Refresh: 5; url=http://upep.info/"
+        print "Refresh: 5; url=http://upep-scmb.biosci.uq.edu.au/"
         print "Content-type: text/html"
         print ## <----- VERY IMPORTANT!!!!!! Blank "print" - Separate Headers
         print 'You will be redirected to uPEPperoni in 5 seconds. \n\
@@ -232,6 +232,9 @@ def weboutput():
     print 'uPEPperoni - Results'
     print '</title>'
     print '</head><body>'
+    with open("../RefSeq/.refseq_version") as refseq_rel_in:
+        rsr = refseq_rel_in.readlines()[0].strip()
+    print '<b>Using RefSeq Release: <b>'+rsr+'</b><br>'
     cleanDataDir()
     CDSfeature = []
     calcKaKs = True
@@ -249,12 +252,12 @@ def weboutput():
             details = accessions.getmRNA(seqquery, mRNAparams[0]*3, mRNAparams[1]*3, mRNAparams[2])
             if details:
                 alignquery = details[0]
-                blastquery = alignquery[:details[1][0]+mRNAparams[2]] #send only the 5'UTR + grace of alignquery to tblastx.py 
+                blastquery = alignquery[:details[1][0]+mRNAparams[2]] #send only the 5'UTR + grace of alignquery to tblastx.py
                 CDSfeature = details[1] + ['CDS']
                 print '<b>QUERY: ' + details[3] + ' (' + seqquery + ')</b>'
                 queryname = seqquery
             else:
-                print '<br>' 
+                print '<br>'
                 print 'Error: Unable to find query mRNA sequence in selected Refseq database. ' + seqquery + ' not found \n \
                 Click <a href="javascript:history.go(-1)"> here </a> to return to the input page.'
                 print '</body></html>'
@@ -263,35 +266,35 @@ def weboutput():
             print '<b>QUERY: User Entered</b>'
             queryname = 'Query'
             alignquery = seqquery
-            blastquery = alignquery 
+            blastquery = alignquery
         ## TODO Un-hardcore these directories to make this code less terrible....
         if seqcheck(alignquery, ('A', 'T', 'C', 'G')):
             dictionaries = dict([('Human', [['../RefSeq/vertebrate_mammalian.db'],'Homo sapiens']),
-				    	('Mouse', [['../RefSeq/vertebrate_mammalian.db'],'Mus musculus']),
-				    	('Mammals', [['../RefSeq/vertebrate_mammalian.db'], None]),
-				    	('Non-mammalian vertebrates',[['../RefSeq/vertebrate_other.db'], None]),
-				    	('All vertebrates', [['../RefSeq/vertebrate_mammalian.db', '../../RefSeq/vertebrate_other.db'],None]),
-				    	('Invertebrates', [['../RefSeq/invertebrate.db'], None]),				    	
-				    	('Plants', [['../RefSeq/plant.db'], None]),
-				    	('Fungi', [['../RefSeq/fungi.db'], None]),
-				    	('Complete',[['../RefSeq/complete.db'], None])])
+                                        ('Mouse', [['../RefSeq/vertebrate_mammalian.db'],'Mus musculus']),
+                                        ('Mammals', [['../RefSeq/vertebrate_mammalian.db'], None]),
+                                        ('Non-mammalian vertebrates',[['../RefSeq/vertebrate_other.db'], None]),
+                                        ('All vertebrates', [['../RefSeq/vertebrate_mammalian.db', '../../RefSeq/vertebrate_other.db'],None]),
+                                        ('Invertebrates', [['../RefSeq/invertebrate.db'], None]),
+                                        ('Plants', [['../RefSeq/plant.db'], None]),
+                                        ('Fungi', [['../RefSeq/fungi.db'], None]),
+                                        ('Complete',[['../RefSeq/complete.db'], None])])
             if not form.has_key("heatmapsize"):
-                print '<br>' 
+                print '<br>'
                 print 'Error: The width of the heatmap was not specified.  \
                 Click <a href="javascript:history.go(-1)"> here </a> to return to the input page.'
                 print '</body></html>'
                 return 0
             heatmapsize = int(form["heatmapsize"].value)
             if (heatmapsize < 400) or (heatmapsize > 10000):
-                print '<br>' 
+                print '<br>'
                 print 'Error: The heapmap width must be between 400 and 10000 pixels.  \
                 Click <a href="javascript:history.go(-1)"> here </a> to return to the input page.'
                 print '</body></html>'
                 return 0
-            blastmatches = tblastx.blastit(blastquery, dictionaries[form["database"].value], "../data")  
+            blastmatches = tblastx.blastit(blastquery, dictionaries[form["database"].value], "../data")
             #print blastmatches
             if len(blastmatches) == 0:
-                print '<br>' 
+                print '<br>'
                 print 'No hits were found for the given input sequence in the \'' + form["database"].value + '\' uPEP database. \n \
                 Click <a href="javascript:history.go(-1)"> here </a> to return to the input page.'
                 print '</body></html>'
@@ -305,13 +308,13 @@ def weboutput():
                 uPEPloc =  eval(blastmatch[0][blastmatch[0].find('['):]) ##Extract uPEP location
                 if hitdef == seqquery:
                     print '<b><u>HIT/REFERENCE:</u> Trivial hit. Same transcript as query sequence (' + hitdef + ')</b><br><br>'
-                    continue 
+                    continue
                 details = accessions.getmRNA(hitdef, 60, 300, 20)
                 if details:
                     alignref = details[0]
                     print '<b><u>HIT/REFERENCE:</u> ' + details[3] + ' ('+ hitdef+ ')</b><br>'
                 else:
-                    print '<br>' 
+                    print '<br>'
                     print 'Error: Internal uPEP database/Refseq database mismatch. ' + hitdef + ' not found \n \
                     This error has been logged and sent to the webmaster. See help for further details.'
                     sys.stderr.write('Error: Internal uPEP database/Refseq database mismatch. ' + hitdef)
@@ -331,7 +334,7 @@ def weboutput():
                             yn00file.write('query\r\n' + uPEPpair[0] + '\r\n' + 'ref\r\n' +uPEPpair[1] + '\r\n')
                         finally:
                             yn00file.close()
-                        retcode = subprocess.call(["../apps/yn00", tempfilename + 'yn00', tempfilename + 'yn00'+ 'uPEP'], stdout=sys.stderr, stderr=sys.stderr) 
+                        retcode = subprocess.call(["../apps/yn00", tempfilename + 'yn00', tempfilename + 'yn00'+ 'uPEP'], stdout=sys.stderr, stderr=sys.stderr)
                         os.remove(tempfilename + 'yn00')
                         kaksfile = open(tempfilename + 'yn00'+ 'uPEP')
                         try:
@@ -343,19 +346,19 @@ def weboutput():
                                 kaksuPEP += temp[1][1:-1].split(' ')
                             except:
                                 sys.stderr.write("Line = {0}".format([temp]))
-                                sys.stderr.flush()                   
+                                sys.stderr.flush()
                         finally:
                             kaksfile.close()
                         os.remove(tempfilename + 'yn00'+ 'uPEP')
                         KaKs_success = True
-                        try: 
+                        try:
                             Ka = abs(float(kaksuPEP[1]))
                             Ks = abs(float(kaksuPEP[2]))
                             KaKs = abs(float(kaksuPEP[0]))
                         except:
                             KaKs_success = False
                         if (not KaKs_success):
-                            print '<span style="font-size:80%"><b>Unable to estimate Ka/Ks ratio of uPEP.</b></span><br>'                        
+                            print '<span style="font-size:80%"><b>Unable to estimate Ka/Ks ratio of uPEP.</b></span><br>'
                         elif (Ks == 0):
                             print '<span style="font-size:80%%"><b>Estimated uPEP Ka/Ks ratio: N/A (Ka: %.4f, Ks: %.4f)</b></span><br>' %(Ka, Ks)
                         else:
@@ -370,7 +373,7 @@ def weboutput():
                                 yn00file.write('query\r\n' + CDSpair[0] + '\r\n' + 'ref\r\n' +CDSpair[1] + '\r\n')
                             finally:
                                 yn00file.close()
-                            retcode = subprocess.call(["../apps/yn00", tempfilename + 'yn00', tempfilename + 'yn00'+ 'CDS']) 
+                            retcode = subprocess.call(["../apps/yn00", tempfilename + 'yn00', tempfilename + 'yn00'+ 'CDS'])
                             os.remove(tempfilename + 'yn00')
                             try:
                                 kaksfile = open(tempfilename + 'yn00'+ 'CDS')
@@ -378,12 +381,12 @@ def weboutput():
                                     line = kaksfile.readline().rstrip()
                                 temp = line.split(' ',1)
                                 kaksCDS = [temp[0]]
-                                kaksCDS += temp[1][1:-1].split(' ')                   
+                                kaksCDS += temp[1][1:-1].split(' ')
                             finally:
                                 kaksfile.close()
                             os.remove(tempfilename + 'yn00'+ 'CDS')
                             KaKs_success = True
-                            try: 
+                            try:
                                 Ka = abs(float(kaksCDS[1]))
                                 Ks = abs(float(kaksCDS[2]))
                                 KaKs = abs(float(kaksCDS[0]))
@@ -396,19 +399,19 @@ def weboutput():
                             else:
                                 print '<span style="font-size:80%%"><b>Estimated CDS Ka/Ks ratio:&nbsp;&nbsp;%.4f (Ka: %.4f, Ks: %.4f)</b></span><br><br>' %(KaKs, Ka, Ks)
                         else:
-                            print '<span style="font-size:80%%"><b>Unable to estimate Ka/Ks ratio of CDS: Query and reference coding sequences of unequal size (%i vs. %i).</b></span><br><br>' %(len(CDSpair[0]), len(CDSpair[1]))                        
+                            print '<span style="font-size:80%%"><b>Unable to estimate Ka/Ks ratio of CDS: Query and reference coding sequences of unequal size (%i vs. %i).</b></span><br><br>' %(len(CDSpair[0]), len(CDSpair[1]))
                     else:
                         print '<span style="font-size:80%"><b>Unable to estimate Ka/Ks ratio of CDS: Unable to define CDS from user entered sequence.</b></span><br><br>'
                 features = []
                 reffeatures = []
                 reffeatures.append(details[1] + ['CDS'])
                 for j in details[2]:
-                    reffeatures.append(j + ['uPEP'])                                     
+                    reffeatures.append(j + ['uPEP'])
                 if CDSfeature:
                     features.append(CDSfeature)
-                features.append(blastmatch[2] + ['uPEP'])           
+                features.append(blastmatch[2] + ['uPEP'])
                 ##if True: #i[3][0] == 1:
-                ##    retcode = subprocess.call(["./yn00", 'ptp4a1upep.nuc', 'ptpuPEP'])    
+                ##    retcode = subprocess.call(["./yn00", 'ptp4a1upep.nuc', 'ptpuPEP'])
                 alignfile1 = open(tempfilename + hitdef + "_1",'wb')
                 alignfile2 = open(tempfilename + hitdef +"_2",'wb')
                 try:
@@ -451,7 +454,7 @@ def weboutput():
                     print '<br><span style="font-size:80%"><b>Heatmap representation of ' + hitdef + ':</b></span><br>'
                     print '<br><img src=../data/' + windowfilename[8:] + 'r.png' + '><br><br>'
             print 'The heatmap diagrams can be downloaded by right-clicking on the image and \
-                    selecting \"Save Picture As...\" (or \"Save Image As...\" in Firefox)'  
+                    selecting \"Save Picture As...\" (or \"Save Image As...\" in Firefox)'
             print '</body></html>'
         else:
             print [alignquery]
@@ -459,7 +462,6 @@ def weboutput():
             print 'Error: Unable to parse query sequence. Invalid characters detected. \n \
                 Click <a href="javascript:history.go(-1)"> here </a> to return to the input page.'
             print '</body></html>'
-                
+
 
 weboutput()
-
