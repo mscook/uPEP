@@ -6,8 +6,7 @@ Overview
 
 See: http://upep-scmb.biosci.uq.edu.au
 
-With this document and the following commands you should be able to get a 
-functioning uPEP install:
+With this document and the following commands you should be close to getting a functioning uPEP install:
     * git clone https://github.com/mscook/uPEP-helpers.git
     * git clone https://github.com/mscook/uPEP.git
 
