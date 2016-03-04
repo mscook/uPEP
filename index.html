@@ -76,7 +76,7 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
 <div id="container">
 
   <div align="center" style="height:125px; padding-top:8px">
-  <img src="media/uPEPlogoblacksmallfilled.png">
+  <img src="media/uPEPlogoblacksmallfilled2a.png">
   </div>
   <div>
     <ul id="querytype" class="glossymenu">
@@ -95,20 +95,47 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
         
       <div id="consUpepdiv">
 		<form method="POST" onsubmit="return validate_conservedupepform(this)" onreset="return confirm('This will reset this page. Continue?')" action="cgi-bin/conservedupep.cgi">
-		<div class="caption">Enter your query nucleotide sequence:</div>
+
+		<div class="caption">Enter your query nucleotide sequence or previous Job ID:</div>
 		<textarea name="seqquery" class="seq" rows="5" cols="60" ></textarea><br><br>
 		<div class="caption">Choose RefSeq database to search:</div>
 		<select style="width:300px; border:single" name="database">
 		    <optgroup label="Refseq Databases:">
-		   	    <option>Human</option>
-		    	<option>Mouse</option>
+		        <option>Complete</option>
 		    	<option>Mammals</option>
 		    	<option>Non-mammalian vertebrates</option>
-		    	<option>All vertebrates</option>
 		    	<option>Invertebrates</option>
 		    	<option>Plants</option>
-		    	<option>Fungi</option>
-                <option>Complete</option>
+		    	<option>Fungi</option>                
+		    </optgroup>
+		</select>
+		<div class="caption">Choose RefSeq database version:</div>
+		<select style="width:160px; border:single" name="database_version">
+		    <optgroup label="Refseq Database Versions:">
+		   	    <option>74</option>
+		    </optgroup>
+		</select>
+	    <div class="caption">Choose starting codons:</div>
+		<select style="width:160px; border:single" name="codon">
+		    <optgroup label="Codons:">
+		        <option>AUG</option>
+		    	<option>AUA</option>
+		    	<option>AUC</option>
+		    	<option>ACG</option>
+		    	<option>AUU</option>
+		    	<option>AAG</option>
+		    	<option>AGG</option>
+		    	<option>CUG</option>
+		    	<option>UUG</option>
+		    	<option>GUG</option>
+		    </optgroup>				
+		</select>
+		<div class="caption">Filter for: (can be used to filter previous job)</div>
+		<select style="width:160px; border:single" name="filter">
+		    <optgroup label="Codons:">
+		        <option>None</option>
+		    	<option>Homo sapiens</option>
+		    	<option>Mus musculus</option>
 		    </optgroup>				
 		</select>
 		<br><br>
@@ -126,6 +153,9 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
             <tr><td width="200"><span class=caption>Reference Heatmaps:</span></td>
 					<td>
             <input onclick="toggle_upepsearch(this)" type="checkbox"  name="refheatmaps" checked="checked" value="ON"></td></tr>
+            <tr><td width="200"><span class=caption>Strict Mode: (can be used to modify previous job)</span></td>
+					<td>
+            <input onclick="toggle_upepsearch(this)" type="checkbox"  name="strict" checked="checked" value="ON"></td></tr>
 				</table>
 				<br>
 				<span class=caption>Marked Regions:</span>
@@ -162,16 +192,18 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
 				<table border="0" style="text-align: center"><tr class="smallcaption">
 					<td width="150"></td>
 					<td width="50">Black</td>
+					<td width="50">Blue</td>
 					<td width="50">Green</td>
 					<td width="50">Yellow</td>
-					<td width="50">Orange</td>
-					<td width="50">Red</td></tr>
+					<td width="50">Red</td>
+					</tr>
 					<tr><td width="150" style="text-align: left"><span class="caption">Gradient Options:</span></td>
 					<td><input type="text" class="textinp" name="gblack" size=2 value='0'></td>
+					<td><input type="text" class="textinp" name="gblue" size=2></td>
 					<td><input type="text" class="textinp" name="ggreen" size=2 value='50'></td>
 					<td><input type="text" class="textinp" name="gyellow" size=2></td>
-					<td><input type="text" class="textinp" name="gorange" size=2></td>
-					<td><input type="text" class="textinp" name="gred" size=2 value='100'></td></tr></table><br>
+					<td><input type="text" class="textinp" name="gred" size=2 value='100'></td>
+					</tr></table><br>
 				<table border="0">
 				<tr><td width="150">
 				<span class="caption">Window Size:</span></td>
@@ -251,15 +283,15 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
 				<table border="0" style="text-align: center"><tr class="smallcaption">
 					<td width="150"></td>
 					<td width="50">Black</td>
+					<td width="50">Blue</td>
 					<td width="50">Green</td>
 					<td width="50">Yellow</td>
-					<td width="50">Orange</td>
 					<td width="50">Red</td></tr>
 					<tr><td width="150" style="text-align: left"><span class="caption">Gradient Options:</span></td>
 					<td><input type="text" class="textinp" name="gblack" size=2 value='0'></td>
+					<td><input type="text" class="textinp" name="gblue" size=2></td>
 					<td><input type="text" class="textinp" name="ggreen" size=2 value='50'></td>
 					<td><input type="text" class="textinp" name="gyellow" size=2></td>
-					<td><input type="text" class="textinp" name="gorange" size=2></td>
 					<td><input type="text" class="textinp" name="gred" size=2 value='100'></td></tr></table><br>
 				<table border="0">
 				<tr><td width="150">
@@ -271,6 +303,9 @@ uPEPperoni - An Online Tool for uPEP Location and Analysis
 				</table>						
 			</div>
 		</div>
+		<div class="caption">Retrieve previous analysis:</div>
+		<input> 
+		
 		<br><input class="button" type="reset" style="width: 75px" value="Reset"><input class="button" style="width: 75px" type="submit" value="Align"></form>&nbsp;		
 	
 	</div> <!-- heatmapdiv -->

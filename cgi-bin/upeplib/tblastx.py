@@ -1,4 +1,4 @@
-import os, subprocess, time, random, gzip
+import os, subprocess, time, random, gzip, ConfigParser
 import accessions
 
 def addnode(openfile, line):
@@ -47,6 +47,9 @@ def parseXMLfile(XMLfile):
     return parselist
 
 def blastit(query, databases, output_dir, SEG_filter=False):
+    config = ConfigParser.ConfigParser()
+    config.read('config.ini')
+    database_loc = config.get('Database', 'database')
     output = []
     for database in databases[0]:
         databaseoutput = []
@@ -119,7 +122,7 @@ def blastit(query, databases, output_dir, SEG_filter=False):
                                 defn = hit_def.split('|')[1].rsplit('_',1)[0]
                                 details = accessions.getCDS(defn)
                                 if details:
-                                    handle = gzip.open('../../RefSeq/' + details[2],'rb','9')
+                                    handle = gzip.open(database_loc + details[2],'rb','9')
                                     try:
                                         while True:
                                             line = handle.readline()

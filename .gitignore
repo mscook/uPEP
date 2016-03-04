@@ -3,3 +3,6 @@ RefSeq*
 *.pyc
 apps/lagan/*
 src/*
+*.py~
+cgi-bin/Untitled Document~
+*.ini~
