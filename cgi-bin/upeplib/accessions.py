@@ -1,7 +1,8 @@
 import gzip
 import sys
 import os
-
+import ConfigParser
+import mysql.connector
 def seqtocaps(seq):
     temp = ''
     for i in seq:
@@ -10,109 +11,84 @@ def seqtocaps(seq):
         else: temp
     return temp
 
-def ACCloc(accession):
-    filename = 'ACCcompletecompact.dict.rna.gbff'
-    filepath = '../RefSeq/' + filename
-    if not os.path.isfile(filepath):
-        sys.stderr.write("Debug 5: No file\n")
-        sys.stderr.flush()
-    readfile = open(filepath,'rb')
-    return_val = None 
-    for line in readfile:
-        if line.find(accession) != -1:
-            return_val = line.rstrip().split('\t')
-            break
-    #readfile.seek(0, 2)
-    #line = readfile.readline()
-    #sys.stderr.write("Debug 4: "+str(line)+'\n')
-    #sys.stderr.flush()
-    #low = 0
-    #high = int((readfile.tell()/80))
-    #pos = (low+high)/2
-    #while True:
-    #    oldpos = pos
-    #    readfile.seek(pos*80)
-    #    line = readfile.readline()
-    #    if accession < line.rsplit('\t')[0]:
-    #        high = pos
-    #        pos = (low+high)/2
-    #    elif accession > line.rsplit('\t')[0]:
-    #        low = pos
-    #        pos = (low+high)/2
-    #    else:
-    #        return_val =  line.rstrip().split('\t')
-    #        break
-    #    if pos == oldpos:
-    #        return_val = None
-    #        break
-    readfile.close()
-    sys.stderr.write("Debug 6: "+str(return_val)+'\n')
-    sys.stderr.flush()
-    return return_val
+def ACCloc(accession, dbstuff):
+    config = ConfigParser.ConfigParser()
+    config.read('config.ini')
+    database_loc = config.get('Database', 'database')
+    dbuser = config.get('MYSQL', 'username')
+    dbpass = str(config.get('MYSQL', 'password'))
+    dbhost = config.get('MYSQL', 'host')
 
-def GIloc(accession):
-    compare = str(accession)
-    filename = 'GIcompletecompact.dict.rna.gbff'
-    filepath = '../RefSeq/' + filename
-    readfile = open(filepath,'rb')
-    return_val = None
-    for line in readfile:
-        if line.find(accession) != -1:
-            return_val = line.rstrip().split('\t')
-            break
-    #readfile.seek(0, 2)
-    #line = readfile.readline()
-    #low = 0
-    #high = int((readfile.tell()/40))
-    #pos = (low+high)/2
-    #while True:
-    #    oldpos = pos
-    #    readfile.seek(pos*40)
-    #    line = readfile.readline()
-    #    compareto = line.rsplit('\t')[0]
-    #    if compare < compareto:
-    #        high = pos
-    #        pos = (low+high)/2
-    #    elif compare > compareto:
-    #        low = pos
-    #        pos = (low+high)/2
-    #    else:
-    #        return ACCloc(line.rsplit('\t')[1].rstrip())
-    #    if pos == oldpos:
-    #        return None
-    readfile.close()
-    sys.stderr.write("Debug 7: "+str(return_val)+'\n')
-    sys.stderr.flush()
-    return return_val
+    dbconnect = mysql.connector.connect(user=dbuser, password=dbpass, host=dbhost)
+    cursor = dbconnect.cursor()
+    dbname = dbstuff
+    sql_dbc = 'use %s;'
+    cursor.execute(sql_dbc % dbname)
+    sql_retrieve = "select * from ACC_complete_compact where accession = '%s';"
+    cursor.execute(sql_retrieve % accession)
+    for (accession, organism, position, filepath) in cursor:
+        acc = accession
+        org = organism
+        pos = position
+        filep = filepath
+        cursor.close()
+        dbconnect.close()
+        return acc, org, pos, filep 
+
+def GIloc(accession, dbstuff):
+    config = ConfigParser.ConfigParser()
+    config.read('config.ini')
+    database_loc = config.get('Database', 'database')
+    dbuser = config.get('MYSQL', 'username')
+    dbpass = str(config.get('MYSQL', 'password'))
+    dbhost = config.get('MYSQL', 'host')
+
+    dbconnect = mysql.connector.connect(user=dbuser, password=dbpass, host=dbhost)
+    cursor = dbconnect.cursor()
+    dbname = dbstuff
+    sql_dbc = 'use %s;'
+    cursor.execute(sql_dbc % dbname)
+    sql_retrieve = "select * from GI_complete_compact where GI = '%s';"
+    cursor.execute(sql_retrieve % accession)
+    for (GI, accession) in cursor:
+        GI = GI
+        acc = accession
+        cursor.close()
+        dbconnect.close()
+        acc2, org2, pos, filep = ACCloc(acc)
+        return acc2, org2, pos, filep
 
    
 
-def getCDS(accession):
+def getCDS(accession, dbstuff):
     sys.stderr.write("Debug 2: "+str(accession)+'\n')
     sys.stderr.flush()
     if len(accession) > 3:
         if accession[:3] == 'GI:':
             sys.stderr.write("Debug 3: GI \n")
             sys.stderr.flush()
-            return GIloc(accession[3:])
+            return GIloc(accession[3:], dbstuff)
         elif (accession[:3] == 'NM_' or accession[:3] == 'XM_'):
             sys.stderr.write("Debug 3: AC \n")
             sys.stderr.flush()
-            return ACCloc(accession)
+            return ACCloc(accession, dbstuff)
         else:
             return None
     else:
         return None
 
-def getmRNA(accession, minsize, maxsize, gracelength):
+def getmRNA(accession, dbstuff, codon, minsize, maxsize, gracelength):
+    config = ConfigParser.ConfigParser()
+    config.read('config.ini')
+    database_loc = config.get('Database', 'database')
     takejoins = True
-    details = getCDS(accession)
+    details = getCDS(accession, dbstuff)
     sys.stderr.write("Debug 1: "+str(details)+'\n')
     sys.stderr.flush()
     if details:
-        handle = gzip.open('../RefSeq/' + details[2],'rb','9')
+        handle = gzip.open(database_loc + details[3],'rb','9')
         try:
-            handle.seek(int(details[1]))
+            handle.seek(int(details[2]))
             while True:
                 line = handle.readline()
                 if line[0:10] == 'DEFINITION':
@@ -149,7 +125,7 @@ def getmRNA(accession, minsize, maxsize, gracelength):
                     uORFs = []
                     if maxsize:
                         for i in range(0, CDSstart):
-                            if temp[i] == 'a' and temp[i+1] == 't' and temp[i+2] == 'g':
+                            if temp[i] == codon[0] and temp[i+1] == codon[1] and temp[i+2] == codon[2]:
                                 j = 0
                                 while (i + j) < CDSstart + gracelength:
                                     j = j + 3
@@ -167,7 +143,7 @@ def getmRNA(accession, minsize, maxsize, gracelength):
                             if j == len(uORFs):
                                 break
                     temp = seqtocaps(temp)               
-                    return [temp, [CDSstart, CDSend], uORFs, definition]       
+                    return [temp, [CDSstart, CDSend], uORFs, definition, details[1]]       
         finally:
             handle.close()                           
     return None

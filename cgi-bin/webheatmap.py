@@ -54,7 +54,7 @@ def valuetocolour(value):
 def homologytocolour(percentidentity, gradvector):
     minpos = None
     maxpos = None
-    for i in range(0,5):
+    for i in range(0,6):
         if not(gradvector[i] == None):
             if percentidentity >= gradvector[i]:
                 minpos = i
@@ -291,8 +291,8 @@ def weboutput():
                             secondsplit = form["markers"].value.index(']')
                             features.append([int(form["markers"].value[1:firstsplit]), int(form["markers"].value[firstsplit+2:secondsplit]), form["markers"].value[secondsplit+2:]])
                     grad = []
-                    gradnames = ["black", "green", "yellow", "orange","red"]
-                    for i in range(0, 5):
+                    gradnames = ["black", "green", "yellow", "orange", "red", "blue"]
+                    for i in range(0, 6):
                         if form.has_key("g"+gradnames[i]):
                             grad.append(float(form["g"+gradnames[i]].value)/100)
                         else:
